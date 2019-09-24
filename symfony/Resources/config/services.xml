@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+
+        <service id="import_converter_product_category.listeners.reduce.category" class="TechDivision\Import\Convert\Product\Category\Listeners\ReduceCategoryListener">
+            <argument type="service" id="import.processor.registry"/>
+        </service>
+
+        <service id="import_converter_product_category.observer.product.category" class="TechDivision\Import\Category\Observers\ProductCategoryConverterObserver"/>
+
+        <service id="import_converter_product_category.subject.product.category" class="TechDivision\Import\Convert\Product\Category\Subjects\ProductCategoryConverterSubject" shared="false">
+            <argument type="service" id="import.processor.registry"/>
+            <argument type="service" id="import.generator.core.config.data.uid"/>
+            <argument type="service" id="loggers"/>
+            <argument type="service" id="import.events.emitter"/>
+        </service>
+
+        <service id="import_converter_product_category.plugin.product.category" class="TechDivision\Import\Convert\Product\Category\Plugins\ProductCategoryConverterPlugin">
+            <argument type="service" id="import_app_simple.simple"/>
+            <argument type="service" id="import.plugin.subject.executor"/>
+            <argument type="service" id="import.subject.file.resolver.factory"/>
+            <argument type="service" id="import.processor.registry"/>
+        </service>
+
+    </services>
+
+</container>
