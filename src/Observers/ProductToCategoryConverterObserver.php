@@ -1,7 +1,7 @@
 <?php
 
 /**
- * TechDivision\Import\Converter\Product\Category\Observers\ProductCategoryConverterObserver
+ * TechDivision\Import\Converter\Product\Category\Observers\ProductToCategoryConverterObserver
  *
  * NOTICE OF LICENSE
  *
@@ -32,7 +32,7 @@ use TechDivision\Import\Converter\Observers\AbstractConverterObserver;
  * @link      https://github.com/techdivision/import-converter-product-category
  * @link      http://www.techdivision.com
  */
-class ProductCategoryConverterObserver extends AbstractConverterObserver
+class ProductToCategoryConverterObserver extends AbstractConverterObserver
 {
 
     /**
@@ -50,41 +50,48 @@ class ProductCategoryConverterObserver extends AbstractConverterObserver
     protected function process()
     {
 
-        // load the categories
+        // load and extract the categories from the CSV file
         if ($paths = $this->getValue(ColumnKeys::CATEGORIES, array(), array($this, 'explode'))) {
-            $this->exportCategories($paths);
-        }
-    }
+            // initialize the array for the artefacts
+            $artefacts = array();
 
-    protected function exportCategories(array $paths)
-    {
+            // create a tree of categories that has to be created
+            foreach ($paths as $path) {
+                // explode the category elements
+                $elements = $this->explode($path, '/');
+                // iterate over the category elements, starting from the root one
+                for ($i = 0; $i < sizeof($elements); $i++) {
+                    // implode the category
+                    $cat = implode('/', array_slice($elements, 0, $i + 1));
+                    // and query if it already exists
+                    if ($this->hasCategoryByPath($cat)) {
+                        continue;
+                    }
 
-        $artefacts = array();
-
-        foreach ($paths as $path) {
-
-            $elements = $this->explode($path, '/');
-
-            for ($i = 0; $i < sizeof($elements); $i++) {
-
-                $cat = implode('/', array_slice($elements, 0, $i + 1));
-
-                if ($this->hasCategoryByPath($cat)) {
-                    continue;
+                    // if not, create a new artefact
+                    $artefacts[] = $this->exportCategory($cat);
                 }
-
-                $artefacts[] = $this->exportCategory($cat);
             }
-        }
 
-        $this->addArtefacts($artefacts);
+            // append the artefacts
+            $this->addArtefacts($artefacts);
+        }
     }
 
+    /**
+     * Create and return a new category from the passed path.
+     *
+     * @param string $path The path to create the category from
+     *
+     * @return array The category
+     */
     protected function exportCategory($path)
     {
 
+        // explode the catgory elements
         $elements = $this->explode($path, '/');
 
+        // create and return the category
         return  $this->newArtefact(
             array(
                 ColumnKeys::ATTRIBUTE_SET_CODE => 'Default',
@@ -172,6 +179,6 @@ class ProductCategoryConverterObserver extends AbstractConverterObserver
      */
     protected function addArtefacts(array $artefacts)
     {
-        $this->getSubject()->addArtefacts(ProductCategoryConverterObserver::ARTEFACT_TYPE, $artefacts);
+        $this->getSubject()->addArtefacts(ProductToCategoryConverterObserver::ARTEFACT_TYPE, $artefacts);
     }
 }

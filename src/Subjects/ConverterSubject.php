@@ -21,8 +21,9 @@
 namespace TechDivision\Import\Converter\Product\Category\Subjects;
 
 use TechDivision\Import\Utils\CacheKeys;
+use TechDivision\Import\Utils\StoreViewCodes;
 use TechDivision\Import\Product\Utils\ColumnKeys;
-use TechDivision\Import\Converter\Subjects\ConverterSubject;
+use TechDivision\Import\Product\Utils\RegistryKeys;
 
 /**
  * The subject implementation that handles the business logic to persist products.
@@ -33,8 +34,35 @@ use TechDivision\Import\Converter\Subjects\ConverterSubject;
  * @link      https://github.com/techdivision/import-converter-product-category
  * @link      http://www.techdivision.com
  */
-class ProductCategoryConverterSubject extends ConverterSubject
+class ConverterSubject extends \TechDivision\Import\Converter\Subjects\ConverterSubject
 {
+
+    /**
+     * The available categories.
+     *
+     * @var array
+     */
+    protected $categories = array();
+
+    /**
+     * Intializes the previously loaded global data for exactly one bunch.
+     *
+     * @param string $serial The serial of the actual import
+     *
+     * @return void
+     */
+    public function setUp($serial)
+    {
+
+        // load the status of the actual import
+        $status = $this->getRegistryProcessor()->getAttribute(RegistryKeys::STATUS);
+
+        // load the categories for the admin store view from the global data
+        $this->categories = $status[RegistryKeys::GLOBAL_DATA][RegistryKeys::CATEGORIES][StoreViewCodes::ADMIN];
+
+        // prepare the callbacks
+        parent::setUp($serial);
+    }
 
     /**
      * Return's the artefacts for post-processing.
@@ -44,12 +72,15 @@ class ProductCategoryConverterSubject extends ConverterSubject
     public function getArtefacts()
     {
 
+        // initialize the array for the artefacts
         $artefacts = array();
 
+        // query whether or not artefacts are available
         if (is_array($arts = $this->getRegistryProcessor()->getAttribute(CacheKeys::ARTEFACTS))) {
             $artefacts = $arts;
         }
 
+        // return the artefacts
         return $artefacts;
     }
 
@@ -65,12 +96,15 @@ class ProductCategoryConverterSubject extends ConverterSubject
     protected function overrideArtefacts($type, array $artefacts)
     {
 
+        // initialize the array for the artefacts that has to be merged
         $toBeMerged = array();
 
+        // add the artefacts by using their array key to override them
         foreach ($artefacts as $key => $artefact) {
             $toBeMerged[$type][$this->getLastEntityId()][$key] = $artefact;
         }
 
+        // replace the artefacts in the registry
         $this->getRegistryProcessor()->mergeAttributesRecursive(CacheKeys::ARTEFACTS, $toBeMerged);
     }
 
@@ -86,12 +120,15 @@ class ProductCategoryConverterSubject extends ConverterSubject
     protected function appendArtefacts($type, array $artefacts)
     {
 
+        // initialize the array for the artefacts that has to be merged
         $toBeMerged = array();
 
+        // append the artefacts
         foreach ($artefacts as $artefact) {
             $toBeMerged[$type][$this->getLastEntityId()][] = $artefact;
         }
 
+        // replace the artefacts in the registry
         $this->getRegistryProcessor()->mergeAttributesRecursive(CacheKeys::ARTEFACTS, $toBeMerged);
     }
 
@@ -107,6 +144,7 @@ class ProductCategoryConverterSubject extends ConverterSubject
     public function getArtefactsByTypeAndEntityId($type, $entityId)
     {
 
+        // load the available artefacts from the registry
         $arts = $this->getRegistryProcessor()->getAttribute(CacheKeys::ARTEFACTS);
 
         // query whether or not, artefacts for the passed params are available
@@ -147,8 +185,10 @@ class ProductCategoryConverterSubject extends ConverterSubject
     public function hasArtefactsByTypeAndEntityId($type, $entityId)
     {
 
+        // load the available artefacts from the registry
         $arts = $this->getRegistryProcessor()->getAttribute(CacheKeys::ARTEFACTS);
 
+        // query whether or not artefacts for the passed type and entity ID are available
         return isset($arts[$type][$entityId]);
     }
 
@@ -173,5 +213,17 @@ class ProductCategoryConverterSubject extends ConverterSubject
     public function getLastEntityId()
     {
         return $this->getValue(ColumnKeys::SKU);
+    }
+
+    /**
+     * Query's whether or not the category with the passed path is available or not.
+     *
+     * @param string $path The path of the category to query
+     *
+     * @return boolean TRUE if the category is available, else FALSE
+     */
+    public function hasCategoryByPath($path)
+    {
+        return isset($this->categories[$path]);
     }
 }

@@ -25,7 +25,7 @@ use League\Event\AbstractListener;
 use TechDivision\Import\Utils\CacheKeys;
 use TechDivision\Import\Category\Utils\ColumnKeys;
 use TechDivision\Import\Services\RegistryProcessorInterface;
-use TechDivision\Import\Converter\Product\Category\Observers\ProductCategoryConverterObserver;
+use TechDivision\Import\Converter\Product\Category\Observers\ProductToCategoryConverterObserver;
 
 /**
  * An listener implementation that reduces and sorts the array with the exported categories.
@@ -38,13 +38,6 @@ use TechDivision\Import\Converter\Product\Category\Observers\ProductCategoryConv
  */
 class ReduceCategoryListener extends AbstractListener
 {
-
-    /**
-     * The array with the categories that has already been processed.
-     *
-     * @var array
-     */
-    protected $processed = array();
 
     /**
      * The registry processor instance.
@@ -73,34 +66,38 @@ class ReduceCategoryListener extends AbstractListener
     public function handle(EventInterface $event)
     {
 
+        // try to load the availalbe artefacts from the registry processor
         if ($artefacts = $this->registryProcessor->getAttribute(CacheKeys::ARTEFACTS)) {
-
-            if (isset($artefacts[ProductCategoryConverterObserver::ARTEFACT_TYPE])) {
-
+            // query whether or not categories are available
+            if (isset($artefacts[ProductToCategoryConverterObserver::ARTEFACT_TYPE])) {
+                // initialize the array for the sorted und merged categories
                 $toExport = array();
 
-                $arts = $artefacts[ProductCategoryConverterObserver::ARTEFACT_TYPE];
-
+                // load the categories from the artefacts
+                $arts = $artefacts[ProductToCategoryConverterObserver::ARTEFACT_TYPE];
+                // iterate over the categories
                 foreach ($arts as $categories) {
-
                     foreach ($categories as $category) {
-
-                        if (in_array($path = $category[ColumnKeys::PATH], $this->processed)) {
+                        // load the category's path
+                        $path = $category[ColumnKeys::PATH];
+                        // query whether or not the category has already been processed
+                        if (isset($toExport[$path])) {
                             continue;
                         }
 
+                        // if not, add it to the array
                         $toExport[$path] = $category;
-
-                        $this->processed[] = $path;
                     }
                 }
 
+                // sort the categories
                 usort($toExport, function ($a, $b) {
                     return strcmp($a[ColumnKeys::PATH], $b[ColumnKeys::PATH]);
                 });
 
-                $artefacts[ProductCategoryConverterObserver::ARTEFACT_TYPE] = array($toExport);
-
+                // replace them in the array with the artefacts
+                $artefacts[ProductToCategoryConverterObserver::ARTEFACT_TYPE] = array($toExport);
+                // override the old artefacts
                 $this->registryProcessor->setAttribute(CacheKeys::ARTEFACTS, $artefacts, array(), array(), true);
             }
         }
