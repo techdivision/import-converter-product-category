@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<ruleset name="techdivision/iimport-converter-product-category">
+<ruleset name="techdivision/import-converter-product-category">
 
     <!--
         The TechDivision GmbH coding standard is using a mix of PSR-2
