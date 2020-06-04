@@ -1,3 +1,13 @@
+# Version 6.0.1
+
+## Bugfixes
+
+* Fixed techdivision/import#178
+
+## Features
+
+* None
+
 # Version 6.0.0
 
 ## Bugfixes

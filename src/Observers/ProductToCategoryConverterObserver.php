@@ -88,8 +88,11 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     protected function exportCategory($path)
     {
 
-        // explode the catgory elements
-        $elements = $this->explode($path, '/');
+        // load the character used to enclose columns
+        $enclosure = $this->getSubject()->getConfiguration()->getEnclosure();
+
+        // upgrade and explode the catgory elements
+        $elements = $this->explode($path = str_replace($enclosure, str_pad($enclosure, 3, $enclosure), $path), '/');
 
         // create and return the category
         return  $this->newArtefact(
