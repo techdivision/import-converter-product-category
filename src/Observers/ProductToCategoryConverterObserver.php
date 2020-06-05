@@ -42,6 +42,11 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
      */
     const ARTEFACT_TYPE = 'category-import';
 
+    /* public function __construct()
+    {
+
+    } */
+
     /**
      * Process the observer's business logic.
      *
@@ -69,13 +74,56 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
                     }
 
                     // if not, create a new artefact
-                    $artefacts[] = $this->exportCategory($cat);
+                    $artefacts[] = $this->exportCategory($this->implode(array_slice($elements, 0, $i + 1)));
                 }
             }
 
             // append the artefacts
             $this->addArtefacts($artefacts);
         }
+    }
+
+    /**
+     * This method implodes the passed category elements and quotes it for export usage.
+     *
+     * The following cases can be handled:
+     *
+     * - Default Category  > Default Category
+     * - Deine/Meine       > "Deine/Meine"
+     * - "Unsere"          > """Unsere"""
+     * - "Meine/Eure"      > """Meine/Euere"""
+     *
+     * if (") then + (")
+     *     - Default Category  > Default Category
+     *     - Deine/Meine       > Deine/Meine
+     *     - "Unsere"          > ""Unsere""
+     *     - "Meine/Eure"      > ""Mein/Eure""
+     * if (") || (/) then + (")
+     *     - Default Category  > Default Category
+     *     - Deine/Meine       > "Deine/Meine"
+     *     - ""Unsere""        > """Unsere"""
+     *     - ""Meine/Eure""    > """Meine/Eure"""
+     *
+     * @param array $elements The array with the elements that has to be imploded
+     *
+     * @return string The imploded
+     */
+    private function implode(array $elements)
+    {
+
+        // load the character used to enclose columns
+        $enclosure = $this->getSubject()->getConfiguration()->getEnclosure();
+
+        array_walk($elements, function (&$element) use ($enclosure) {
+
+            $element = str_replace($enclosure, str_pad($enclosure, 2, $enclosure), $element);
+
+            if (strpos($element, '/') !== false || strpos($element, $enclosure) !== false) {
+                $element = $enclosure . $element . $enclosure;
+            }
+        });
+
+        return implode('/', $elements);
     }
 
     /**
@@ -88,11 +136,9 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     protected function exportCategory($path)
     {
 
-        // load the character used to enclose columns
-        $enclosure = $this->getSubject()->getConfiguration()->getEnclosure();
-
-        // upgrade and explode the catgory elements
-        $elements = $this->explode($path = str_replace($enclosure, str_pad($enclosure, 3, $enclosure), $path), '/');
+        // upgrade and explode the catgory elements to
+        // load the last element which is the name
+        $elements = $this->explode($path, '/');
 
         // create and return the category
         return  $this->newArtefact(
