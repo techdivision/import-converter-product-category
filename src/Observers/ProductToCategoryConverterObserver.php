@@ -12,7 +12,7 @@
  * PHP version 5
  *
  * @author    Tim Wagner <t.wagner@techdivision.com>
- * @copyright 2019 TechDivision GmbH <info@techdivision.com>
+ * @copyright 2020 TechDivision GmbH <info@techdivision.com>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/techdivision/import-converter-product-category
  * @link      http://www.techdivision.com
@@ -28,7 +28,7 @@ use TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInter
  * Observer that extracts the categories from a product CSV.
  *
  * @author    Tim Wagner <t.wagner@techdivision.com>
- * @copyright 2019 TechDivision GmbH <info@techdivision.com>
+ * @copyright 2020 TechDivision GmbH <info@techdivision.com>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/techdivision/import-converter-product-category
  * @link      http://www.techdivision.com
@@ -106,13 +106,11 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     protected function exportCategory(array $elements) : array
     {
 
-        $elements = $this->upgradeFilter->filter($this, $elements);
+        // extract the category name from the array (the last element)
+        $name = $elements[sizeof($elements) - 1];
 
-        $path = implode('/', $elements);
-
-        // upgrade and explode the catgory elements to
-        // load the last element which is the name
-        $elements = $this->explode($path, '/');
+        // upgrade and explode the catgory elements to load the last element which is the name
+        $path = implode('/', $this->upgradeFilter->filter($this, $elements));
 
         // create and return the category
         return  $this->newArtefact(
@@ -120,7 +118,7 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
                 ColumnKeys::ATTRIBUTE_SET_CODE => 'Default',
                 ColumnKeys::STORE_VIEW_CODE    => $this->getValue(ColumnKeys::STORE_VIEW_CODE),
                 ColumnKeys::PATH               => $path,
-                ColumnKeys::NAME               => end($elements),
+                ColumnKeys::NAME               => $name,
                 ColumnKeys::URL_KEY            => null,
                 ColumnKeys::IS_ACTIVE          => 1,
                 ColumnKeys::IS_ANCHOR          => 1,

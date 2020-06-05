@@ -1,3 +1,13 @@
+# Version 7.0.0
+
+## Bugfixes
+
+* Fixed issue when converting categories that contain quotes
+
+## Features
+
+* None
+
 # Version 6.0.1
 
 ## Bugfixes
