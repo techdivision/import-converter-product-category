@@ -20,6 +20,8 @@
 
 namespace TechDivision\Import\Converter\Product\Category\Observers\Filters;
 
+use TechDivision\Import\Observers\ObserverInterface;
+
 /**
  * Observer that extracts the categories from a product CSV.
  *
@@ -29,11 +31,11 @@ namespace TechDivision\Import\Converter\Product\Category\Observers\Filters;
  * @link      https://github.com/techdivision/import-converter-product-category
  * @link      http://www.techdivision.com
  */
-class CategoryUpgradeFilter
+class CategoryUpgradeFilter implements FilterInterface
 {
 
     /**
-     * This method implodes the passed category elements and quotes it for export usage.
+     * This method quotes the passed category elements for export usage.
      *
      * The following cases can be handled:
      *
@@ -42,36 +44,40 @@ class CategoryUpgradeFilter
      * - "Unsere"          > """Unsere"""
      * - "Meine/Eure"      > """Meine/Euere"""
      *
-     * if (") then + (")
+     * if (") then + double all (")
      *     - Default Category  > Default Category
      *     - Deine/Meine       > Deine/Meine
      *     - "Unsere"          > ""Unsere""
      *     - "Meine/Eure"      > ""Mein/Eure""
-     * if (") || (/) then + (")
+     * if (") || (/) then + surround values with (")
      *     - Default Category  > Default Category
      *     - Deine/Meine       > "Deine/Meine"
      *     - ""Unsere""        > """Unsere"""
      *     - ""Meine/Eure""    > """Meine/Eure"""
      *
-     * @param array $elements The array with the elements that has to be imploded
+     * @param \TechDivision\Import\Observers\ObserverInterface $observer  The subject instance
+     * @param array                                            $elements  The array with the elements that has to be filtered
+     * @param string                                           $delimiter The delimiter used to explode/implode the elements
      *
-     * @return string The imploded
+     * @return array The filtered elements
      */
-    public function filter(array $elements) : string
+    public function filter(ObserverInterface $observer, array $elements, string $delimiter = '/') : array
     {
 
         // load the character used to enclose columns
-        $enclosure = $this->getSubject()->getConfiguration()->getEnclosure();
+        $enclosure = $observer->getSubject()->getConfiguration()->getEnclosure();
 
-        array_walk($elements, function (&$element) use ($enclosure) {
-
+        // filter the category elements and upgrade them for expoort purposes
+        array_walk($elements, function (&$element) use ($enclosure, $delimiter) {
+            // add one quote to each quote
             $element = str_replace($enclosure, str_pad($enclosure, 2, $enclosure), $element);
-
-            if (strpos($element, '/') !== false || strpos($element, $enclosure) !== false) {
+            // if the element contains the delimiter char OR the enclosur char, surround it with additional quotes
+            if (strpos($element, $delimiter) !== false || strpos($element, $enclosure) !== false) {
                 $element = $enclosure . $element . $enclosure;
             }
         });
 
-        return implode('/', $elements);
+        // return the filtered elements
+        return $elements;
     }
 }

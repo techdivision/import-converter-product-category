@@ -9,7 +9,11 @@
             <argument type="service" id="import.processor.registry"/>
         </service>
 
-        <service id="import_converter_product_category.observer.product.to.category" class="TechDivision\Import\Converter\Product\Category\Observers\ProductToCategoryConverterObserver"/>
+        <service id="import_converter_product_category.observer.filter.category.upgrade" class="TechDivision\Import\Converter\Product\Category\Observers\Filters\CategoryUpgradeFilter"/>
+
+        <service id="import_converter_product_category.observer.product.to.category" class="TechDivision\Import\Converter\Product\Category\Observers\ProductToCategoryConverterObserver">
+            <argument type="service" id="import_converter_product_category.observer.filter.category.upgrade"/>
+        </service>
 
         <service id="import_converter_product_category.subject.converter" class="TechDivision\Import\Converter\Product\Category\Subjects\ConverterSubject" shared="false">
             <argument type="service" id="import.processor.registry"/>

@@ -20,8 +20,10 @@
 
 namespace TechDivision\Import\Converter\Product\Category\Observers\Filters;
 
+use TechDivision\Import\Observers\ObserverInterface;
+
 /**
- * Observer that extracts the categories from a product CSV.
+ * Interface for filter implementations.
  *
  * @author    Tim Wagner <t.wagner@techdivision.com>
  * @copyright 2020 TechDivision GmbH <info@techdivision.com>
@@ -33,11 +35,12 @@ interface FilterInterface
 {
 
     /**
-     * This method implodes the passed category elements and quotes it for export usage.
+     * This method filters the passed elements.
      *
-     * @param array $elements The array with the elements that has to be filtered
+     * @param \TechDivision\Import\Observers\ObserverInterface $observer The subject instance
+     * @param array                                            $elements The array with the elements that has to be filtered
      *
-     * @return string The filtered elements
+     * @return array The filtered elements
      */
-    public function filter(array $elements) : array;
+    public function filter(ObserverInterface $observer, array $elements) : array;
 }

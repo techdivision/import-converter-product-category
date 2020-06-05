@@ -22,6 +22,7 @@ namespace TechDivision\Import\Converter\Product\Category\Observers;
 
 use TechDivision\Import\Category\Utils\ColumnKeys;
 use TechDivision\Import\Converter\Observers\AbstractConverterObserver;
+use TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface;
 
 /**
  * Observer that extracts the categories from a product CSV.
@@ -42,10 +43,22 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
      */
     const ARTEFACT_TYPE = 'category-import';
 
-    /* public function __construct()
-    {
+    /**
+     * The upgrade filter instance.
+     *
+     * @var \TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface
+     */
+    private $upgradeFilter;
 
-    } */
+    /**
+     * Initialize the observer with the category upgrade filter instance.
+     *
+     * @param \TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface $upgradefilter The upgrade filter instance
+     */
+    public function __construct(FilterInterface $upgradefilter)
+    {
+        $this->upgradeFilter = $upgradefilter;
+    }
 
     /**
      * Process the observer's business logic.
@@ -67,14 +80,14 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
                 // iterate over the category elements, starting from the root one
                 for ($i = 0; $i < sizeof($elements); $i++) {
                     // implode the category
-                    $cat = implode('/', array_slice($elements, 0, $i + 1));
+                    $cat = implode('/', $cats = array_slice($elements, 0, $i + 1));
                     // and query if it already exists
                     if ($this->hasCategoryByPath($cat)) {
                         continue;
                     }
 
                     // if not, create a new artefact
-                    $artefacts[] = $this->exportCategory($this->implode(array_slice($elements, 0, $i + 1)));
+                    $artefacts[] = $this->exportCategory($cats);
                 }
             }
 
@@ -84,57 +97,18 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     }
 
     /**
-     * This method implodes the passed category elements and quotes it for export usage.
-     *
-     * The following cases can be handled:
-     *
-     * - Default Category  > Default Category
-     * - Deine/Meine       > "Deine/Meine"
-     * - "Unsere"          > """Unsere"""
-     * - "Meine/Eure"      > """Meine/Euere"""
-     *
-     * if (") then + (")
-     *     - Default Category  > Default Category
-     *     - Deine/Meine       > Deine/Meine
-     *     - "Unsere"          > ""Unsere""
-     *     - "Meine/Eure"      > ""Mein/Eure""
-     * if (") || (/) then + (")
-     *     - Default Category  > Default Category
-     *     - Deine/Meine       > "Deine/Meine"
-     *     - ""Unsere""        > """Unsere"""
-     *     - ""Meine/Eure""    > """Meine/Eure"""
-     *
-     * @param array $elements The array with the elements that has to be imploded
-     *
-     * @return string The imploded
-     */
-    private function implode(array $elements)
-    {
-
-        // load the character used to enclose columns
-        $enclosure = $this->getSubject()->getConfiguration()->getEnclosure();
-
-        array_walk($elements, function (&$element) use ($enclosure) {
-
-            $element = str_replace($enclosure, str_pad($enclosure, 2, $enclosure), $element);
-
-            if (strpos($element, '/') !== false || strpos($element, $enclosure) !== false) {
-                $element = $enclosure . $element . $enclosure;
-            }
-        });
-
-        return implode('/', $elements);
-    }
-
-    /**
      * Create and return a new category from the passed path.
      *
-     * @param string $path The path to create the category from
+     * @param array $elements The array with the category elements that has to be filtered
      *
-     * @return array The category
+     * @return array The category artefact
      */
-    protected function exportCategory($path)
+    protected function exportCategory(array $elements) : array
     {
+
+        $elements = $this->upgradeFilter->filter($this, $elements);
+
+        $path = implode('/', $elements);
 
         // upgrade and explode the catgory elements to
         // load the last element which is the name
