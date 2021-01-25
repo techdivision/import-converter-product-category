@@ -21,8 +21,10 @@
 namespace TechDivision\Import\Converter\Product\Category\Observers;
 
 use TechDivision\Import\Category\Utils\ColumnKeys;
+use TechDivision\Import\Subjects\SubjectInterface;
+use TechDivision\Import\Observers\ObserverFactoryInterface;
+use TechDivision\Import\Serializer\SerializerFactoryInterface;
 use TechDivision\Import\Converter\Observers\AbstractConverterObserver;
-use TechDivision\Import\Utils\CategoryPathUtilInterface;
 
 /**
  * Observer that extracts the categories from a product CSV.
@@ -33,7 +35,7 @@ use TechDivision\Import\Utils\CategoryPathUtilInterface;
  * @link      https://github.com/techdivision/import-converter-product-category
  * @link      http://www.techdivision.com
  */
-class ProductToCategoryConverterObserver extends AbstractConverterObserver
+class ProductToCategoryConverterObserver extends AbstractConverterObserver implements ObserverFactoryInterface
 {
 
     /**
@@ -44,20 +46,44 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     const ARTEFACT_TYPE = 'category-import';
 
     /**
-     * The utility to handle catgory paths.
+     * The serializer used to serializer/unserialize the categories from the path column.
      *
-     * @var \TechDivision\Import\Utils\CategoryPathUtilInterface
+     * @var \TechDivision\Import\Serializer\SerializerInterface
      */
-    private $categoryPathUtil;
+    private $serializer;
 
     /**
-     * Initialize the observer with the category upgrade filter instance.
+     * The serializer factory instance.
      *
-     * @param \TechDivision\Import\Utils\CategoryPathUtilInterface $categoryPathUtil The utility to handle category paths
+     * @var \TechDivision\Import\Serializer\SerializerFactoryInterface
      */
-    public function __construct(CategoryPathUtilInterface $categoryPathUtil)
+    private $serializerFactory;
+
+    /**
+     * Initialize the observer with the serializer factory instance.
+     *
+     * @param \TechDivision\Import\Serializer\SerializerFactoryInterface $serializerFactory The serializer factory instance
+     */
+    public function __construct(SerializerFactoryInterface $serializerFactory)
     {
-        $this->categoryPathUtil = $categoryPathUtil;
+        $this->serializerFactory = $serializerFactory;
+    }
+
+    /**
+     * Will be invoked by the observer visitor when a factory has been defined to create the observer instance.
+     *
+     * @param \TechDivision\Import\Subjects\SubjectInterface $subject The subject instance
+     *
+     * @return \TechDivision\Import\Observers\ObserverInterface The observer instance
+     */
+    public function createObserver(SubjectInterface $subject)
+    {
+
+        // initialize the serializer instance
+        $this->serializer = $this->serializerFactory->createSerializer($subject->getConfiguration()->getImportAdapter());
+
+        // return the initialized instance
+        return $this;
     }
 
     /**
@@ -69,18 +95,20 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     {
 
         // load the categoreis from the column
-        if ($paths = $this->categoryPathUtil->fromProduct($this->getValue(ColumnKeys::CATEGORIES))) {
+        if ($paths = $this->getValue(ColumnKeys::CATEGORIES, array(), array($this, 'explode'))) {
             // initialize the array for the artefacts
             $artefacts = array();
 
             // create a tree of categories that has to be created
-            foreach ($paths as $elements) {
+            foreach ($paths as $path) {
+                // explode the path elements
+                $elements = $this->serializer->explode($path);
                 // iterate over the category elements, starting from the root one
                 for ($i = 0; $i < sizeof($elements); $i++) {
                     // load the elements to preapre the category path with
                     $cats = array_slice($elements, 0, $i + 1);
                     // implode the category and query if it already exists
-                    if ($this->hasCategoryByPath($p = $this->categoryPathUtil->implode($cats))) {
+                    if ($this->hasCategoryByPath($p = $this->serializer->implode($cats))) {
                         continue;
                     }
 
