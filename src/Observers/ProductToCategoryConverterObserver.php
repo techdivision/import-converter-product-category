@@ -22,7 +22,7 @@ namespace TechDivision\Import\Converter\Product\Category\Observers;
 
 use TechDivision\Import\Category\Utils\ColumnKeys;
 use TechDivision\Import\Converter\Observers\AbstractConverterObserver;
-use TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface;
+use TechDivision\Import\Utils\CategoryPathUtilInterface;
 
 /**
  * Observer that extracts the categories from a product CSV.
@@ -44,20 +44,20 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     const ARTEFACT_TYPE = 'category-import';
 
     /**
-     * The upgrade filter instance.
+     * The utility to handle catgory paths.
      *
-     * @var \TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface
+     * @var \TechDivision\Import\Utils\CategoryPathUtilInterface
      */
-    private $upgradeFilter;
+    private $categoryPathUtil;
 
     /**
      * Initialize the observer with the category upgrade filter instance.
      *
-     * @param \TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface $upgradefilter The upgrade filter instance
+     * @param \TechDivision\Import\Utils\CategoryPathUtilInterface $categoryPathUtil The utility to handle category paths
      */
-    public function __construct(FilterInterface $upgradefilter)
+    public function __construct(CategoryPathUtilInterface $categoryPathUtil)
     {
-        $this->upgradeFilter = $upgradefilter;
+        $this->categoryPathUtil = $categoryPathUtil;
     }
 
     /**
@@ -68,26 +68,24 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     protected function process()
     {
 
-        // load and extract the categories from the CSV file
-        if ($paths = $this->getValue(ColumnKeys::CATEGORIES, array(), array($this, 'explode'))) {
+        // load the categoreis from the column
+        if ($paths = $this->categoryPathUtil->fromProduct($this->getValue(ColumnKeys::CATEGORIES))) {
             // initialize the array for the artefacts
             $artefacts = array();
 
             // create a tree of categories that has to be created
-            foreach ($paths as $path) {
-                // explode the category elements
-                $elements = $this->explode($path, '/');
+            foreach ($paths as $elements) {
                 // iterate over the category elements, starting from the root one
                 for ($i = 0; $i < sizeof($elements); $i++) {
-                    // implode the category
-                    $cat = implode('/', $cats = array_slice($elements, 0, $i + 1));
-                    // and query if it already exists
-                    if ($this->hasCategoryByPath($cat)) {
+                    // load the elements to preapre the category path with
+                    $cats = array_slice($elements, 0, $i + 1);
+                    // implode the category and query if it already exists
+                    if ($this->hasCategoryByPath($p = $this->categoryPathUtil->implode($cats))) {
                         continue;
                     }
 
                     // if not, create a new artefact
-                    $artefacts[] = $this->exportCategory($cats);
+                    $artefacts[] = $this->exportCategory($p, $cats[sizeof($cats) - 1]);
                 }
             }
 
@@ -97,20 +95,15 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     }
 
     /**
-     * Create and return a new category from the passed path.
+     * Create and return a new category from the passed path and name.
      *
-     * @param array $elements The array with the category elements that has to be filtered
+     * @param string $path The category path
+     * @param string $name The category name
      *
      * @return array The category artefact
      */
-    protected function exportCategory(array $elements) : array
+    protected function exportCategory(string $path, string $name) : array
     {
-
-        // extract the category name from the array (the last element)
-        $name = $elements[sizeof($elements) - 1];
-
-        // upgrade and explode the catgory elements to load the last element which is the name
-        $path = implode('/', $this->upgradeFilter->filter($this, $elements));
 
         // create and return the category
         return  $this->newArtefact(
