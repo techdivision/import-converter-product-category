@@ -1,7 +1,7 @@
 <?php
 
 /**
- * TechDivision\Import\Converter\DependencyInjection\ImportExtension
+ * TechDivision\Import\Converter\Product\Category\DependencyInjection\ImportExtension
  *
  * NOTICE OF LICENSE
  *
@@ -18,7 +18,7 @@
  * @link      http://www.techdivision.com
  */
 
-namespace TechDivision\Import\Converter\DependencyInjection;
+namespace TechDivision\Import\Converter\Product\Category\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;

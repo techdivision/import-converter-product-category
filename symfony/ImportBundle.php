@@ -1,7 +1,7 @@
 <?php
 
 /**
- * TechDivision\Import\Converter\ImportBundle
+ * TechDivision\Import\Converter\Product\Category\ImportBundle
  *
  * NOTICE OF LICENSE
  *
@@ -18,7 +18,7 @@
  * @link      http://www.techdivision.com
  */
 
-namespace TechDivision\Import\Converter;
+namespace TechDivision\Import\Converter\Product\Category;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
