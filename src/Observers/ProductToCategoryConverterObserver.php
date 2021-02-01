@@ -21,8 +21,10 @@
 namespace TechDivision\Import\Converter\Product\Category\Observers;
 
 use TechDivision\Import\Category\Utils\ColumnKeys;
+use TechDivision\Import\Subjects\SubjectInterface;
+use TechDivision\Import\Observers\ObserverFactoryInterface;
+use TechDivision\Import\Serializer\SerializerFactoryInterface;
 use TechDivision\Import\Converter\Observers\AbstractConverterObserver;
-use TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface;
 
 /**
  * Observer that extracts the categories from a product CSV.
@@ -33,7 +35,7 @@ use TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInter
  * @link      https://github.com/techdivision/import-converter-product-category
  * @link      http://www.techdivision.com
  */
-class ProductToCategoryConverterObserver extends AbstractConverterObserver
+class ProductToCategoryConverterObserver extends AbstractConverterObserver implements ObserverFactoryInterface
 {
 
     /**
@@ -44,20 +46,44 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     const ARTEFACT_TYPE = 'category-import';
 
     /**
-     * The upgrade filter instance.
+     * The serializer used to serializer/unserialize the categories from the path column.
      *
-     * @var \TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface
+     * @var \TechDivision\Import\Serializer\SerializerInterface
      */
-    private $upgradeFilter;
+    private $serializer;
 
     /**
-     * Initialize the observer with the category upgrade filter instance.
+     * The serializer factory instance.
      *
-     * @param \TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface $upgradefilter The upgrade filter instance
+     * @var \TechDivision\Import\Serializer\SerializerFactoryInterface
      */
-    public function __construct(FilterInterface $upgradefilter)
+    private $serializerFactory;
+
+    /**
+     * Initialize the observer with the serializer factory instance.
+     *
+     * @param \TechDivision\Import\Serializer\SerializerFactoryInterface $serializerFactory The serializer factory instance
+     */
+    public function __construct(SerializerFactoryInterface $serializerFactory)
     {
-        $this->upgradeFilter = $upgradefilter;
+        $this->serializerFactory = $serializerFactory;
+    }
+
+    /**
+     * Will be invoked by the observer visitor when a factory has been defined to create the observer instance.
+     *
+     * @param \TechDivision\Import\Subjects\SubjectInterface $subject The subject instance
+     *
+     * @return \TechDivision\Import\Observers\ObserverInterface The observer instance
+     */
+    public function createObserver(SubjectInterface $subject)
+    {
+
+        // initialize the serializer instance
+        $this->serializer = $this->serializerFactory->createSerializer($subject->getConfiguration()->getImportAdapter());
+
+        // return the initialized instance
+        return $this;
     }
 
     /**
@@ -68,26 +94,26 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     protected function process()
     {
 
-        // load and extract the categories from the CSV file
+        // load the categories from the column
         if ($paths = $this->getValue(ColumnKeys::CATEGORIES, array(), array($this, 'explode'))) {
             // initialize the array for the artefacts
             $artefacts = array();
 
             // create a tree of categories that has to be created
             foreach ($paths as $path) {
-                // explode the category elements
-                $elements = $this->explode($path, '/');
+                // explode the path elements
+                $elements = $this->serializer->explode($path);
                 // iterate over the category elements, starting from the root one
                 for ($i = 0; $i < sizeof($elements); $i++) {
-                    // implode the category
-                    $cat = implode('/', $cats = array_slice($elements, 0, $i + 1));
-                    // and query if it already exists
-                    if ($this->hasCategoryByPath($cat)) {
+                    // load the elements to preapre the category path with
+                    $cats = array_slice($elements, 0, $i + 1);
+                    // implode the category and query if it already exists
+                    if ($this->hasCategoryByPath($p = $this->serializer->implode($cats))) {
                         continue;
                     }
 
                     // if not, create a new artefact
-                    $artefacts[] = $this->exportCategory($cats);
+                    $artefacts[] = $this->exportCategory($p, $cats[sizeof($cats) - 1]);
                 }
             }
 
@@ -97,20 +123,15 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     }
 
     /**
-     * Create and return a new category from the passed path.
+     * Create and return a new category from the passed path and name.
      *
-     * @param array $elements The array with the category elements that has to be filtered
+     * @param string $path The category path
+     * @param string $name The category name
      *
      * @return array The category artefact
      */
-    protected function exportCategory(array $elements) : array
+    protected function exportCategory(string $path, string $name) : array
     {
-
-        // extract the category name from the array (the last element)
-        $name = $elements[sizeof($elements) - 1];
-
-        // upgrade and explode the catgory elements to load the last element which is the name
-        $path = implode('/', $this->upgradeFilter->filter($this, $elements));
 
         // create and return the category
         return  $this->newArtefact(

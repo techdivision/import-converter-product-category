@@ -9,10 +9,20 @@
             <argument type="service" id="import.processor.registry"/>
         </service>
 
-        <service id="import_converter_product_category.observer.filter.category.upgrade" class="TechDivision\Import\Converter\Product\Category\Observers\Filters\CategoryUpgradeFilter"/>
-
         <service id="import_converter_product_category.observer.product.to.category" class="TechDivision\Import\Converter\Product\Category\Observers\ProductToCategoryConverterObserver">
-            <argument type="service" id="import_converter_product_category.observer.filter.category.upgrade"/>
+            <argument type="service" id="import.serializer.factory.csv.category"/>
+        </service>
+
+        <!--
+         | The DI configuration for the composite observers of the inventory add-update operation.
+         |-->
+        <service id="import_converter_product_category.observer.composite.convert" class="TechDivision\Import\Observers\GenericCompositeObserver">
+            <call method="addObserver">
+                <argument id="import_product.observer.normalize.categories" type="service"/>
+            </call>
+            <call method="addObserver">
+                <argument id="import_converter_product_category.observer.product.to.category" type="service"/>
+            </call>
         </service>
 
         <service id="import_converter_product_category.subject.converter" class="TechDivision\Import\Converter\Product\Category\Subjects\ConverterSubject" shared="false">
