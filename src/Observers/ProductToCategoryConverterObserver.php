@@ -94,7 +94,7 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver imple
     protected function process()
     {
 
-        // load the categoreis from the column
+        // load the categories from the column
         if ($paths = $this->getValue(ColumnKeys::CATEGORIES, array(), array($this, 'explode'))) {
             // initialize the array for the artefacts
             $artefacts = array();
