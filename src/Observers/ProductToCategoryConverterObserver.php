@@ -12,7 +12,7 @@
  * PHP version 5
  *
  * @author    Tim Wagner <t.wagner@techdivision.com>
- * @copyright 2020 TechDivision GmbH <info@techdivision.com>
+ * @copyright 2021 TechDivision GmbH <info@techdivision.com>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/techdivision/import-converter-product-category
  * @link      http://www.techdivision.com
@@ -21,14 +21,14 @@
 namespace TechDivision\Import\Converter\Product\Category\Observers;
 
 use TechDivision\Import\Category\Utils\ColumnKeys;
+use TechDivision\Import\Category\Filters\FilterInterface;
 use TechDivision\Import\Converter\Observers\AbstractConverterObserver;
-use TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface;
 
 /**
  * Observer that extracts the categories from a product CSV.
  *
  * @author    Tim Wagner <t.wagner@techdivision.com>
- * @copyright 2020 TechDivision GmbH <info@techdivision.com>
+ * @copyright 2021 TechDivision GmbH <info@techdivision.com>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/techdivision/import-converter-product-category
  * @link      http://www.techdivision.com
@@ -46,18 +46,18 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
     /**
      * The upgrade filter instance.
      *
-     * @var \TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface
+     * @var \TechDivision\Import\Category\Filters\FilterInterface
      */
     private $upgradeFilter;
 
     /**
      * Initialize the observer with the category upgrade filter instance.
      *
-     * @param \TechDivision\Import\Converter\Product\Category\Observers\Filters\FilterInterface $upgradefilter The upgrade filter instance
+     * @param \TechDivision\Import\Category\Filters\FilterInterface $upgradeFilter The upgrade filter instance
      */
-    public function __construct(FilterInterface $upgradefilter)
+    public function __construct(FilterInterface $upgradeFilter)
     {
-        $this->upgradeFilter = $upgradefilter;
+        $this->upgradeFilter = $upgradeFilter;
     }
 
     /**
@@ -110,7 +110,7 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver
         $name = $elements[sizeof($elements) - 1];
 
         // upgrade and explode the catgory elements to load the last element which is the name
-        $path = implode('/', $this->upgradeFilter->filter($this, $elements));
+        $path = implode('/', $this->upgradeFilter->filter($this->subject, $elements));
 
         // create and return the category
         return  $this->newArtefact(

@@ -25,11 +25,13 @@ use TechDivision\Import\Observers\ObserverInterface;
 /**
  * Interface for filter implementations.
  *
- * @author    Tim Wagner <t.wagner@techdivision.com>
- * @copyright 2020 TechDivision GmbH <info@techdivision.com>
- * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
- * @link      https://github.com/techdivision/import-converter-product-category
- * @link      http://www.techdivision.com
+ * @author     Tim Wagner <t.wagner@techdivision.com>
+ * @copyright  2020 TechDivision GmbH <info@techdivision.com>
+ * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ * @link       https://github.com/techdivision/import-converter-product-category
+ * @link       http://www.techdivision.com
+ * @deprecated Since 9.0.1
+ * @see        \TechDivision\Import\Category\Filters\FilterInterface
  */
 interface FilterInterface
 {

@@ -1,3 +1,13 @@
+# Version 9.0.1
+
+## Bugfixes
+
+* Fixed #PAC-338: Exception when category sorting changes
+
+## Features
+
+* None
+
 # Version 9.0.0
 
 ## Bugfixes
