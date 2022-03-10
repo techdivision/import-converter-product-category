@@ -107,7 +107,10 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver imple
                     }
 
                     // if not, create a new artefact
-                    $artefacts[] = $this->exportCategory($p, $cats[sizeof($cats) - 1]);
+                    $artefactRow = $this->exportCategory($p, $cats[sizeof($cats) - 1]);
+                    if (!empty($artefactRow)) {
+                        $artefacts[] = $artefactRow;
+                    }
                 }
             }
 
@@ -126,7 +129,9 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver imple
      */
     protected function exportCategory(string $path, string $name) : array
     {
-
+        if (empty($name)) {
+            return [];
+        }
         // create and return the category
         return  $this->newArtefact(
             array(
