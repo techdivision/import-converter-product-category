@@ -1,3 +1,13 @@
+# Version 10.0.0
+
+## Bugfixes
+
+* Create new categories on product import always on default store
+
+## Features
+
+* none
+
 # Version 9.0.0
 
 ## Bugfixes

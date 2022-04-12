@@ -136,7 +136,7 @@ class ProductToCategoryConverterObserver extends AbstractConverterObserver imple
         return  $this->newArtefact(
             array(
                 ColumnKeys::ATTRIBUTE_SET_CODE => 'Default',
-                ColumnKeys::STORE_VIEW_CODE    => $this->getValue(ColumnKeys::STORE_VIEW_CODE),
+                ColumnKeys::STORE_VIEW_CODE    => '', // Categories always global
                 ColumnKeys::PATH               => $path,
                 ColumnKeys::NAME               => $name,
                 ColumnKeys::URL_KEY            => null,
