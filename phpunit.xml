@@ -1,7 +1,7 @@
 <phpunit>
 	<testsuites>
 		<testsuite name="techdivision/import-converter-product-category PHPUnit testsuite">
-			<directory suffix="Test.php">tests</directory>
+			<directory suffix="Test.php">tests/unit</directory>
 		</testsuite>
 	</testsuites>
 	<filter>
