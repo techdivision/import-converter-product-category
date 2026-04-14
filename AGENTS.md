@@ -2,75 +2,64 @@
 
 ## Zweck & Verantwortung
 
-Das `import-converter-product-category` Modul bietet **Product CSV zu Category CSV Konvertierung**. Es ist ein **Tier 5 Modul** und erweitert `import-converter`.
+Product-Category Converter für Kategorie-Zuordnungen. **Tier 3 Modul**.
 
 **Hauptverantwortung:**
-- Transformation von Product CSV zu Category CSV
-- Observer Pattern für Konvertierungs-Hooks
-- Event-Driven für Konvertierungs-Prozesse
-- Listener für Custom Processing
+- Data Processing und Konvertierung
+- Validation Framework
+- Error Handling
+- Service Layer Implementation
 
 ## Architektur & Design Patterns
 
 ### Kern-Klassen
-- **ProductCategoryConverter**: Haupt-Converter-Klasse
-- **ProductCategoryConverterObserver**: Observer für Hooks
-- **ProductCategoryConverterListener**: Listener für Events
+- **Repository**: Persistierungs-Layer
+- **Processor**: Service Layer
+- **Validator**: Validierungs-Framework
+- **Observer**: Lifecycle Hooks
 
 ### Verwendete Patterns
-- **Observer Pattern**: Für Konvertierungs-Hooks
-- **Event-Driven**: Für Konvertierungs-Prozesse
-- **Strategy Pattern**: Verschiedene Konvertierungs-Strategien
+- **Observer Pattern**: Für Hooks
+- **Repository Pattern**: Datenschicht-Abstraktion
+- **Service Layer**: Business Logic
+- **Factory Pattern**: Object Creation
 
 ## Abhängigkeiten
 
-### Externe Pakete
-- **Keine**
-
-### TechDivision Dependencies
-- **import-product** ^26.0.0 - Product Importer
-- **import-category** ^22.0.0 - Category Importer
-- **import-converter** ^12.0.0 - Converter Framework
-
-### Abhängig von diesem Modul (1 Reverse Dependency)
-- **import-cli-simple** - Master CLI
+- **import-***: Verschiedene andere Importer je nach Modul
+- **Magento_Framework**: Core Framework
 
 ## Wichtige Entry Points
 
-### Converter Klassen
 ```php
-// Product Category Converter
-ProductCategoryConverter::convert($row): array
-ProductCategoryConverter::getSubject(): SubjectInterface
-
-// Converter Observer
-ProductCategoryConverterObserver::handle($row): void
+// Repository::create()
+Repository::create($row): void
+Repository::find($id): Entity
 ```
 
 ## Events & Extension Points
 
-### Events
-- **BeforeConversionEvent**: Vor Konvertierung
-- **AfterConversionEvent**: Nach Konvertierung
+**Observer Hooks** für Lifecycle Integration
 
-### Listeners
-- **ConversionListener**: Für Custom Processing
+## Database Schema
+
+Modul-spezifische Tabellen je nach Verwendung
 
 ## Hints für KI-Agenten
 
-### Wichtig zu verstehen
-1. **Tier 5 Modul**: Erweitert Converter Framework
-2. **Konvertierungs-fokussiert**: Product → Category CSV
-3. **Observer Pattern**: Für Hooks
-4. **Event-Driven**: Für Konvertierungs-Prozesse
+### Kritisches Verständnis
+1. **Daten-Oriented**: Fokus auf Data Processing
+2. **Converter/Serializer**: Transformieren Datenformate
+3. **Tier 1-4**: Unterschiedliche Abstraktions-Level
+4. **Repository Pattern**: Standard für Persistierung
 
-## Bekannte Einschränkungen
+## Known Limitations
 
-- **Product-Category-Only**: Nur für Product-Category Links
-- **CSV-Only**: Nur CSV-Format unterstützt
+- Format-spezifisch: Abhängig von Input-Format
+- Validierungs-Regeln: Streng für Datenkonsistenz
 
 ## Zusammenfassung
 
-`import-converter-product-category` ist ein **Tier 5 Modul**, das Product CSV zu Category CSV Konvertierung bietet. Es erweitert den Converter Framework mit spezialisierter Funktionalität.
+import-converter-product-category: Spezialisiertes Import-Modul für Data Processing und Konvertierung.
 
-**Für Agenten:** Verstehe dieses Modul als **Product Category Converter** mit Observer und Event-Driven Architektur.
+**Für Agenten:** Data Processing mit Repository und Service Layer Patterns.
